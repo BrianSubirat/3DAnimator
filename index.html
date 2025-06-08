@@ -1,0 +1,90 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3D Editor Pro</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/",
+        "split-grid": "https://unpkg.com/split-grid@1.0.11/dist/split-grid.mjs"
+      }
+    }
+  </script>
+  <script src="main.js" type="module"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="toolbar">
+      <div class="toolbar-section">
+        <button id="addCube" class="icon-button">📦 Cube</button>
+        <button id="addSphere" class="icon-button">⚪ Sphere</button>
+        <button id="addCylinder" class="icon-button">🛢️ Cylinder</button>
+        <button id="delete" class="icon-button danger">🗑️ Delete</button>
+      </div>
+      <div class="toolbar-section">
+        <select id="mode" class="mode-select">
+          <option value="translate">🔄 Move</option>
+          <option value="rotate">↻ Rotate</option>
+          <option value="scale">⇲ Scale</option>
+        </select>
+      </div>
+      <div class="toolbar-section">
+        <button id="importModel" class="icon-button">📥 Import</button>
+        <button id="exportVideo" class="icon-button">📹 Export Video</button>
+      </div>
+      <div class="toolbar-section animation-controls">
+        <button id="addKeyframe" class="icon-button accent">⚡ Keyframe</button>
+        <button id="play" class="play-button accent">▶</button>
+        <input type="range" id="timeline" min="0" max="100" value="0">
+        <span id="timeDisplay" class="time-display">0:00</span>
+      </div>
+    </div>
+    
+    <div class="main-content">
+      <div class="viewport" id="viewport"></div>
+      <div class="gutter gutter-col"></div>
+      <div class="side-panel">
+        <div class="panel-section">
+          <h3>🎥 Lighting & Camera</h3>
+          <div class="control-group">
+            <label>Ambient Light</label>
+            <input type="range" id="ambientLight" min="0" max="1" step="0.1" value="0.5">
+          </div>
+          <div class="control-group">
+            <label>Directional Light</label>
+            <input type="range" id="directionalLight" min="0" max="1" step="0.1" value="0.5">
+          </div>
+          <div class="control-group">
+            <label>Shadow Intensity</label>
+            <input type="range" id="shadowIntensity" min="0" max="1" step="0.1" value="0.5">
+          </div>
+          <label class="checkbox-label">
+            <input type="checkbox" id="enableShadows" checked>
+            Enable Shadows
+          </label>
+        </div>
+        
+        <div class="panel-section">
+          <h3>📸 Camera Views</h3>
+          <div class="button-group">
+            <button id="saveCameraPosition" class="full-width-button">💾 Save Camera</button>
+            <button id="resetCamera" class="full-width-button">🔄 Reset Camera</button>
+          </div>
+          <div class="camera-presets">
+            <button data-preset="front">Front</button>
+            <button data-preset="side">Side</button>
+            <button data-preset="top">Top</button>
+          </div>
+        </div>
+
+        <div class="panel-section keyframes-panel">
+          <h3>⚡ Keyframes</h3>
+          <div id="keyframes-container"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
