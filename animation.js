@@ -3,15 +3,19 @@ import { THREE } from './main.js';
 export class AnimationSystem {
   constructor(editor) {
     this.editor = editor;
-    this.keyframes = new Map(); // Map<time, Map<object, properties>>
+    this.keyframes = new Map();
     this.currentTime = 0;
-    this.duration = 100; // Total animation duration in frames
+    this.duration = 250;
+    this.fps = 30;
     this.lastUpdateTime = 0;
-    this.fps = 30; // Animation frames per second
+    this.interpolationMode = 'linear';
   }
 
   addKeyframe() {
-    if (!this.editor.selectedObject) return;
+    if (!this.editor.selectedObject) {
+      document.getElementById('statusMessage').textContent = 'No object selected';
+      return;
+    }
     
     const object = this.editor.selectedObject;
     const time = this.currentTime;
@@ -28,6 +32,8 @@ export class AnimationSystem {
     
     this.keyframes.get(time).set(object.uuid, frame);
     this.editor.keyframePanel.updateKeyframes();
+    
+    document.getElementById('statusMessage').textContent = `Keyframe added at frame ${Math.round(time)}`;
   }
 
   setCurrentTime(time) {
@@ -37,19 +43,20 @@ export class AnimationSystem {
   }
 
   updateTimeDisplay() {
-    const seconds = Math.floor(this.currentTime / this.fps);
-    const frames = Math.floor(this.currentTime % this.fps);
-    document.getElementById('timeDisplay').textContent = 
-      `${seconds}:${String(frames).padStart(2, '0')}`;
+    const frame = Math.round(this.currentTime);
+    const seconds = Math.floor(frame / this.fps);
+    const remainingFrames = frame % this.fps;
+    
+    document.getElementById('currentFrame').value = frame;
+    document.getElementById('timeline').value = this.currentTime;
   }
 
   update() {
     const currentTime = performance.now();
-    const deltaTime = (currentTime - this.lastUpdateTime) / 1000; // Convert to seconds
+    const deltaTime = (currentTime - this.lastUpdateTime) / 1000;
     
     if (deltaTime >= 1 / this.fps) {
       this.currentTime = (this.currentTime + 1) % this.duration;
-      document.getElementById('timeline').value = this.currentTime;
       this.updateObjects();
       this.updateTimeDisplay();
       this.lastUpdateTime = currentTime;
@@ -69,11 +76,16 @@ export class AnimationSystem {
     if (prevTime === undefined || nextTime === undefined) return;
     
     let alpha = (this.currentTime - prevTime) / (nextTime - prevTime);
-    if (prevTime > nextTime) { // Handle loop case
+    if (prevTime > nextTime) {
       alpha = (this.currentTime - prevTime) / (this.duration - prevTime + nextTime);
     }
     
-    alpha = Math.max(0, Math.min(1, alpha)); // Clamp between 0 and 1
+    alpha = Math.max(0, Math.min(1, alpha));
+    
+    // Apply interpolation curve
+    if (this.interpolationMode === 'bezier') {
+      alpha = this.bezierInterpolation(alpha);
+    }
     
     const prevFrames = this.keyframes.get(prevTime);
     const nextFrames = this.keyframes.get(nextTime);
@@ -83,19 +95,24 @@ export class AnimationSystem {
       const object = this.editor.scene.getObjectByProperty('uuid', uuid);
       
       if (object && nextFrame) {
-        // Position interpolation
         object.position.lerpVectors(prevFrame.position, nextFrame.position, alpha);
         
-        // Rotation interpolation
         const prevEuler = new THREE.Vector3(prevFrame.rotation.x, prevFrame.rotation.y, prevFrame.rotation.z);
         const nextEuler = new THREE.Vector3(nextFrame.rotation.x, nextFrame.rotation.y, nextFrame.rotation.z);
         const interpolatedEuler = new THREE.Vector3();
         interpolatedEuler.lerpVectors(prevEuler, nextEuler, alpha);
         object.rotation.setFromVector3(interpolatedEuler);
         
-        // Scale interpolation
         object.scale.lerpVectors(prevFrame.scale, nextFrame.scale, alpha);
       }
     }
+  }
+
+  bezierInterpolation(t) {
+    return t * t * (3.0 - 2.0 * t);
+  }
+
+  setInterpolationMode(mode) {
+    this.interpolationMode = mode;
   }
 }

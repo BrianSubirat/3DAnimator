@@ -1,90 +1,693 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>3D Editor Pro</title>
+  <title>Blender Clone - 3D Editor</title>
   <link rel="stylesheet" href="style.css">
   <script type="importmap">
     {
       "imports": {
         "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
         "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/",
-        "split-grid": "https://unpkg.com/split-grid@1.0.11/dist/split-grid.mjs"
+        "split-grid": "https://unpkg.com/split-grid@1.0.11/dist/split-grid.mjs",
+        "cannon-es": "https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js"
       }
     }
   </script>
   <script src="main.js" type="module"></script>
 </head>
 <body>
-  <div class="container">
-    <div class="toolbar">
-      <div class="toolbar-section">
-        <button id="addCube" class="icon-button">📦 Cube</button>
-        <button id="addSphere" class="icon-button">⚪ Sphere</button>
-        <button id="addCylinder" class="icon-button">🛢️ Cylinder</button>
-        <button id="delete" class="icon-button danger">🗑️ Delete</button>
+  <div class="app-container">
+    <!-- Header Menu Bar -->
+    <div class="header-menu">
+      <div class="menu-group">
+        <button class="menu-item" id="fileMenu">File</button>
+        <button class="menu-item" id="editMenu">Edit</button>
+        <button class="menu-item" id="addMenu">Add</button>
+        <button class="menu-item" id="objectMenu">Object</button>
+        <button class="menu-item" id="renderMenu">Render</button>
+        <button class="menu-item" id="windowMenu">Window</button>
+        <button class="menu-item" id="helpMenu">Help</button>
       </div>
-      <div class="toolbar-section">
-        <select id="mode" class="mode-select">
-          <option value="translate">🔄 Move</option>
-          <option value="rotate">↻ Rotate</option>
-          <option value="scale">⇲ Scale</option>
-        </select>
+      <div class="workspace-tabs">
+        <button class="workspace-tab active" data-workspace="layout">Layout</button>
+        <button class="workspace-tab" data-workspace="modeling">Modeling</button>
+        <button class="workspace-tab" data-workspace="animation">Animation</button>
+        <button class="workspace-tab" data-workspace="shading">Shading</button>
+        <button class="workspace-tab" data-workspace="rendering">Rendering</button>
       </div>
-      <div class="toolbar-section">
-        <button id="importModel" class="icon-button">📥 Import</button>
-        <button id="exportVideo" class="icon-button">📹 Export Video</button>
-      </div>
-      <div class="toolbar-section animation-controls">
-        <button id="addKeyframe" class="icon-button accent">⚡ Keyframe</button>
-        <button id="play" class="play-button accent">▶</button>
-        <input type="range" id="timeline" min="0" max="100" value="0">
-        <span id="timeDisplay" class="time-display">0:00</span>
+      <div class="header-controls">
+        <button class="mode-toggle" id="darkModeToggle" title="Toggle Dark/Light Mode">🌙</button>
+        <button class="mode-toggle" id="compactModeToggle" title="Toggle Compact Mode">📱</button>
       </div>
     </div>
-    
-    <div class="main-content">
-      <div class="viewport" id="viewport"></div>
-      <div class="gutter gutter-col"></div>
-      <div class="side-panel">
-        <div class="panel-section">
-          <h3>🎥 Lighting & Camera</h3>
-          <div class="control-group">
-            <label>Ambient Light</label>
-            <input type="range" id="ambientLight" min="0" max="1" step="0.1" value="0.5">
+
+    <!-- Main Layout -->
+    <div class="main-layout">
+      <!-- Central Area -->
+      <div class="central-area">
+        <!-- Viewport Header -->
+        <div class="viewport-header">
+          <div class="viewport-controls">
+            <div class="tool-group">
+              <button class="tool-btn active" id="selectTool" title="Select Tool (S)">
+                <span class="icon">⚡</span>
+              </button>
+              <button class="tool-btn" id="moveTool" title="Move Tool (G)">
+                <span class="icon">🔄</span>
+              </button>
+              <button class="tool-btn" id="rotateTool" title="Rotate Tool (R)">
+                <span class="icon">↻</span>
+              </button>
+              <button class="tool-btn" id="scaleTool" title="Scale Tool (S)">
+                <span class="icon">⇲</span>
+              </button>
+            </div>
+            <div class="tool-separator"></div>
+            <div class="tool-group">
+              <button class="tool-btn" id="addCube" title="Add Cube (Shift+A)">
+                <span class="icon">📦</span>
+              </button>
+              <button class="tool-btn" id="addSphere" title="Add Sphere">
+                <span class="icon">⚪</span>
+              </button>
+              <button class="tool-btn" id="addCylinder" title="Add Cylinder">
+                <span class="icon">🛢️</span>
+              </button>
+              <button class="tool-btn" id="addCloth" title="Add Cloth">
+                <span class="icon">🧵</span>
+              </button>
+            </div>
+            <div class="tool-separator"></div>
+            <div class="tool-group">
+              <button class="tool-btn" id="autoArrange" title="Auto Arrange Objects">
+                <span class="icon">🎯</span>
+              </button>
+              <button class="tool-btn" id="snapGrid" title="Snap to Grid">
+                <span class="icon">⚏</span>
+              </button>
+              <button class="tool-btn" id="smartMaterial" title="Smart Material">
+                <span class="icon">🎨</span>
+              </button>
+            </div>
+            <div class="tool-separator"></div>
+            <div class="tool-group">
+              <button class="tool-btn" id="delete" title="Delete Selected (X)">
+                <span class="icon">🗑️</span>
+              </button>
+              <button class="tool-btn" id="importModel" title="Import Model">
+                <span class="icon">📥</span>
+              </button>
+              <button class="tool-btn" id="duplicateObject" title="Duplicate (Shift+D)">
+                <span class="icon">📋</span>
+              </button>
+            </div>
+            <select id="viewportShading" class="viewport-select">
+              <option value="solid">Solid</option>
+              <option value="wireframe">Wireframe</option>
+              <option value="material">Material Preview</option>
+              <option value="rendered">Rendered</option>
+            </select>
+            <div class="viewport-overlays">
+              <button class="overlay-btn active" title="Show Grid">Grid</button>
+              <button class="overlay-btn active" title="Show Gizmos">Gizmos</button>
+            </div>
           </div>
-          <div class="control-group">
-            <label>Directional Light</label>
-            <input type="range" id="directionalLight" min="0" max="1" step="0.1" value="0.5">
-          </div>
-          <div class="control-group">
-            <label>Shadow Intensity</label>
-            <input type="range" id="shadowIntensity" min="0" max="1" step="0.1" value="0.5">
-          </div>
-          <label class="checkbox-label">
-            <input type="checkbox" id="enableShadows" checked>
-            Enable Shadows
-          </label>
-        </div>
-        
-        <div class="panel-section">
-          <h3>📸 Camera Views</h3>
-          <div class="button-group">
-            <button id="saveCameraPosition" class="full-width-button">💾 Save Camera</button>
-            <button id="resetCamera" class="full-width-button">🔄 Reset Camera</button>
-          </div>
-          <div class="camera-presets">
-            <button data-preset="front">Front</button>
-            <button data-preset="side">Side</button>
-            <button data-preset="top">Top</button>
+          <div class="viewport-info">
+            <span id="objectCount">Objects: 0</span>
+            <span id="fpsCounter">FPS: 60</span>
           </div>
         </div>
 
-        <div class="panel-section keyframes-panel">
-          <h3>⚡ Keyframes</h3>
-          <div id="keyframes-container"></div>
+        <!-- 3D Viewport -->
+        <div class="viewport-container">
+          <div class="viewport" id="viewport"></div>
+          <div class="viewport-navigation">
+            <div class="nav-cube">
+              <div class="nav-face front" data-view="front">Front</div>
+              <div class="nav-face back" data-view="back">Back</div>
+              <div class="nav-face right" data-view="right">Right</div>
+              <div class="nav-face left" data-view="left">Left</div>
+              <div class="nav-face top" data-view="top">Top</div>
+              <div class="nav-face bottom" data-view="bottom">Bottom</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Timeline -->
+        <div class="timeline-area">
+          <div class="timeline-controls">
+            <button id="playReverse" class="timeline-btn" title="Play Reverse">◀◀</button>
+            <button id="stepBack" class="timeline-btn" title="Step Back">◀</button>
+            <button id="play" class="timeline-btn play-btn" title="Play/Pause">▶</button>
+            <button id="stepForward" class="timeline-btn" title="Step Forward">▶</button>
+            <button id="playForward" class="timeline-btn" title="Play Forward">▶▶</button>
+          </div>
+          <div class="timeline-scrubber">
+            <div class="frame-display">
+              <input type="number" id="currentFrame" value="1" min="1" max="250">
+              <span>/</span>
+              <input type="number" id="endFrame" value="250" min="1" max="1000">
+            </div>
+            <div class="timeline-track">
+              <input type="range" id="timeline" min="0" max="250" value="0" class="timeline-slider">
+              <div class="keyframe-markers" id="keyframeMarkers"></div>
+            </div>
+          </div>
+          <div class="timeline-options">
+            <button id="addKeyframe" class="timeline-btn keyframe-btn" title="Add Keyframe (I)">⚡</button>
+            <button id="exportVideo" class="timeline-btn" title="Export Animation">📹</button>
+            <select id="playbackSpeed" class="timeline-select">
+              <option value="0.25">0.25x</option>
+              <option value="0.5">0.5x</option>
+              <option value="1" selected>1x</option>
+              <option value="2">2x</option>
+              <option value="4">4x</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Properties Panel -->
+      <div class="properties-panel">
+        <div class="properties-tabs">
+          <button class="prop-tab active" data-tab="tools" title="Tools">🛠️</button>
+          <button class="prop-tab" data-tab="scene" title="Scene">🌍</button>
+          <button class="prop-tab" data-tab="object" title="Object">📦</button>
+          <button class="prop-tab" data-tab="material" title="Material">🎨</button>
+          <button class="prop-tab" data-tab="physics" title="Physics">⚖️</button>
+          <button class="prop-tab" data-tab="animation" title="Animation">🎬</button>
+          <button class="prop-tab" data-tab="history" title="History">📜</button>
+          <button class="prop-tab" data-tab="assets" title="Assets">📚</button>
+        </div>
+
+        <div class="properties-content">
+          <!-- Tools Panel -->
+          <div class="prop-panel active" id="tools-panel">
+            <div class="prop-section">
+              <h3>🛠️ Tools</h3>
+              <div class="tool-grid">
+                <button class="tool-btn active" id="selectTool2" title="Select Tool">
+                  <span class="icon">⚡</span>
+                  <span class="label">Select</span>
+                </button>
+                <button class="tool-btn" id="moveTool2" title="Move Tool">
+                  <span class="icon">🔄</span>
+                  <span class="label">Move</span>
+                </button>
+                <button class="tool-btn" id="rotateTool2" title="Rotate Tool">
+                  <span class="icon">↻</span>
+                  <span class="label">Rotate</span>
+                </button>
+                <button class="tool-btn" id="scaleTool2" title="Scale Tool">
+                  <span class="icon">⇲</span>
+                  <span class="label">Scale</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="prop-section">
+              <h3>➕ Add Objects</h3>
+              <div class="tool-grid">
+                <button class="tool-btn" id="addCube2" title="Add Cube">
+                  <span class="icon">📦</span>
+                  <span class="label">Cube</span>
+                </button>
+                <button class="tool-btn" id="addSphere2" title="Add Sphere">
+                  <span class="icon">⚪</span>
+                  <span class="label">Sphere</span>
+                </button>
+                <button class="tool-btn" id="addCylinder2" title="Add Cylinder">
+                  <span class="icon">🛢️</span>
+                  <span class="label">Cylinder</span>
+                </button>
+                <button class="tool-btn" id="addCloth2" title="Add Cloth">
+                  <span class="icon">🧵</span>
+                  <span class="label">Cloth</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="prop-section">
+              <h3>🎯 Smart Tools</h3>
+              <div class="tool-grid">
+                <button class="tool-btn" id="autoArrange2" title="Auto Arrange">
+                  <span class="icon">🎯</span>
+                  <span class="label">Auto Arrange</span>
+                </button>
+                <button class="tool-btn" id="snapGrid2" title="Snap to Grid">
+                  <span class="icon">⚏</span>
+                  <span class="label">Snap Grid</span>
+                </button>
+                <button class="tool-btn" id="smartMaterial2" title="Smart Material">
+                  <span class="icon">🎨</span>
+                  <span class="label">Smart Material</span>
+                </button>
+                <button class="tool-btn" id="generateTexture" title="Generate Texture">
+                  <span class="icon">🖼️</span>
+                  <span class="label">AI Texture</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="prop-section">
+              <h3>🗂️ Actions</h3>
+              <div class="tool-grid">
+                <button class="tool-btn danger" id="delete2" title="Delete">
+                  <span class="icon">🗑️</span>
+                  <span class="label">Delete</span>
+                </button>
+                <button class="tool-btn" id="importModel2" title="Import Model">
+                  <span class="icon">📥</span>
+                  <span class="label">Import</span>
+                </button>
+                <button class="tool-btn" id="duplicateObject2" title="Duplicate">
+                  <span class="icon">📋</span>
+                  <span class="label">Duplicate</span>
+                </button>
+                <button class="tool-btn" id="exportModel" title="Export Model">
+                  <span class="icon">📤</span>
+                  <span class="label">Export</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="prop-section">
+              <h3>🎬 Post-Processing</h3>
+              <div class="tool-grid">
+                <button class="tool-btn" id="depthBlur" title="Depth Blur">
+                  <span class="icon">🌫️</span>
+                  <span class="label">Depth FX</span>
+                </button>
+                <button class="tool-btn" id="bloom" title="Bloom Effect">
+                  <span class="icon">✨</span>
+                  <span class="label">Bloom</span>
+                </button>
+                <button class="tool-btn" id="hdrFilter" title="HDR Filter">
+                  <span class="icon">🌈</span>
+                  <span class="label">HDR</span>
+                </button>
+                <button class="tool-btn" id="vintageFilter" title="Vintage Filter">
+                  <span class="icon">📷</span>
+                  <span class="label">Vintage</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene Properties -->
+          <div class="prop-panel" id="scene-panel">
+            <div class="prop-section">
+              <h3>🌍 Scene</h3>
+              <div class="prop-group">
+                <label>Background Color</label>
+                <input type="color" id="backgroundColor" value="#1a1a1a">
+              </div>
+              <div class="prop-group">
+                <label>Environment HDRI</label>
+                <select id="environmentHDRI">
+                  <option value="none">None</option>
+                  <option value="studio">Studio</option>
+                  <option value="outdoor">Outdoor</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="prop-section">
+              <h3>💡 Lighting</h3>
+              <div class="prop-group">
+                <label>Ambient Light</label>
+                <input type="range" id="ambientLight" min="0" max="2" step="0.1" value="0.5">
+                <span class="value-display">0.5</span>
+              </div>
+              <div class="prop-group">
+                <label>Directional Light</label>
+                <input type="range" id="directionalLight" min="0" max="2" step="0.1" value="0.5">
+                <span class="value-display">0.5</span>
+              </div>
+              <div class="prop-group">
+                <label>Shadow Quality</label>
+                <select id="shadowQuality">
+                  <option value="low">Low</option>
+                  <option value="medium" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div class="prop-checkbox">
+                <input type="checkbox" id="enableShadows" checked>
+                <label for="enableShadows">Enable Shadows</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Object Properties -->
+          <div class="prop-panel" id="object-panel">
+            <div class="prop-section">
+              <h3>📦 Transform</h3>
+              <div class="transform-group">
+                <label>Location</label>
+                <div class="xyz-input">
+                  <input type="number" id="posX" step="0.1" placeholder="X">
+                  <input type="number" id="posY" step="0.1" placeholder="Y">
+                  <input type="number" id="posZ" step="0.1" placeholder="Z">
+                </div>
+              </div>
+              <div class="transform-group">
+                <label>Rotation</label>
+                <div class="xyz-input">
+                  <input type="number" id="rotX" step="0.1" placeholder="X">
+                  <input type="number" id="rotY" step="0.1" placeholder="Y">
+                  <input type="number" id="rotZ" step="0.1" placeholder="Z">
+                </div>
+              </div>
+              <div class="transform-group">
+                <label>Scale</label>
+                <div class="xyz-input">
+                  <input type="number" id="scaleX" step="0.1" placeholder="X">
+                  <input type="number" id="scaleY" step="0.1" placeholder="Y">
+                  <input type="number" id="scaleZ" step="0.1" placeholder="Z">
+                </div>
+              </div>
+            </div>
+
+            <div class="prop-section">
+              <h3>🎯 Object Info</h3>
+              <div class="prop-group">
+                <label>Name</label>
+                <input type="text" id="objectName" placeholder="Object Name">
+              </div>
+              <div class="prop-group">
+                <label>Type</label>
+                <input type="text" id="objectType" readonly>
+              </div>
+            </div>
+          </div>
+
+          <!-- Material Properties -->
+          <div class="prop-panel" id="material-panel">
+            <div class="prop-section">
+              <h3>🎨 Material</h3>
+              <div class="prop-group">
+                <label>Base Color</label>
+                <input type="color" id="materialColor" value="#ffffff">
+              </div>
+              <div class="prop-group">
+                <label>Metallic</label>
+                <input type="range" id="metallic" min="0" max="1" step="0.1" value="0">
+                <span class="value-display">0</span>
+              </div>
+              <div class="prop-group">
+                <label>Roughness</label>
+                <input type="range" id="roughness" min="0" max="1" step="0.1" value="0.5">
+                <span class="value-display">0.5</span>
+              </div>
+              <div class="prop-group">
+                <label>Emission</label>
+                <input type="range" id="emission" min="0" max="5" step="0.1" value="0">
+                <span class="value-display">0</span>
+              </div>
+              <div class="prop-checkbox">
+                <input type="checkbox" id="wireframeMode">
+                <label for="wireframeMode">Wireframe</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Physics Properties -->
+          <div class="prop-panel" id="physics-panel">
+            <div class="prop-section">
+              <h3>⚖️ Physics</h3>
+              <div class="prop-group">
+                <label>Gravity</label>
+                <input type="range" id="gravity" min="0" max="20" step="0.5" value="9.8">
+                <span class="value-display">9.8</span>
+              </div>
+              <div class="prop-group">
+                <label>Cloth Resolution</label>
+                <input type="range" id="clothResolution" min="5" max="30" step="1" value="15">
+                <span class="value-display">15</span>
+              </div>
+              <div class="prop-group">
+                <label>Cloth Stiffness</label>
+                <input type="range" id="clothStiffness" min="0.1" max="2" step="0.1" value="1">
+                <span class="value-display">1</span>
+              </div>
+              <div class="physics-controls">
+                <button id="playPhysics" class="prop-btn primary">▶️ Play Physics</button>
+                <button id="resetPhysics" class="prop-btn">🔄 Reset</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Animation Properties -->
+          <div class="prop-panel" id="animation-panel">
+            <div class="prop-section">
+              <h3>🎬 Animation</h3>
+              <div class="prop-group">
+                <label>Frame Rate</label>
+                <select id="frameRate">
+                  <option value="24">24 FPS</option>
+                  <option value="30" selected>30 FPS</option>
+                  <option value="60">60 FPS</option>
+                </select>
+              </div>
+              <div class="prop-group">
+                <label>Interpolation</label>
+                <select id="interpolation">
+                  <option value="linear" selected>Linear</option>
+                  <option value="bezier">Bezier</option>
+                  <option value="constant">Constant</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="prop-section">
+              <h3>⚡ Keyframes</h3>
+              <div class="keyframes-list" id="keyframes-container">
+                <!-- Keyframes will be populated here -->
+              </div>
+            </div>
+          </div>
+
+          <!-- History Panel -->
+          <div class="prop-panel" id="history-panel">
+            <div class="prop-section">
+              <h3>📜 History</h3>
+              <div class="history-list" id="historyList">
+                <!-- History items will be populated here -->
+              </div>
+              <div class="history-controls">
+                <button id="undoBtn" class="prop-btn">↶ Undo</button>
+                <button id="redoBtn" class="prop-btn">↷ Redo</button>
+                <button id="clearHistory" class="prop-btn danger">Clear</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Assets Panel -->
+          <div class="prop-panel" id="assets-panel">
+            <div class="prop-section">
+              <h3>📚 Asset Library</h3>
+              <div class="asset-categories">
+                <button class="category-btn active" data-category="primitives">Primitives</button>
+                <button class="category-btn" data-category="furniture">Furniture</button>
+                <button class="category-btn" data-category="nature">Nature</button>
+                <button class="category-btn" data-category="custom">Custom</button>
+              </div>
+              <div class="asset-grid" id="assetGrid">
+                <!-- Asset items will be populated here -->
+              </div>
+            </div>
+            <div class="prop-section">
+              <h3>💾 Project</h3>
+              <div class="project-controls">
+                <button id="saveProject" class="prop-btn primary">💾 Save Project</button>
+                <button id="loadProject" class="prop-btn">📁 Load Project</button>
+                <button id="exportProject" class="prop-btn">📤 Export Scene</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-left">
+        <span id="statusMessage">Ready</span>
+      </div>
+      <div class="status-right">
+        <span id="memoryUsage">Memory: 0MB</span>
+        <span id="renderInfo">Tris: 0</span>
+      </div>
+    </div>
   </div>
+
+  <!-- Texture Library Modal -->
+  <div class="modal-overlay" id="textureLibraryModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🖼️ Texture Library</h3>
+        <button class="modal-close" id="closeTextureLibrary">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="texture-library" id="textureLibrary">
+          <!-- Textures will be populated here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="applySelectedTexture" class="btn primary" style="display: none;">✅ Apply Texture</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Context Menu -->
+  <div class="context-menu" id="contextMenu">
+    <button class="context-menu-item" id="contextDuplicate">
+      <span>📋</span> Duplicate
+    </button>
+    <button class="context-menu-item" id="contextIsolate">
+      <span>👁️</span> Isolate
+    </button>
+    <div class="context-menu-separator"></div>
+    <button class="context-menu-item danger" id="contextDelete">
+      <span>🗑️</span> Delete
+    </button>
+  </div>
+
+  <!-- Render Panel Modal -->
+  <div class="modal-overlay" id="renderModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🖼️ Render Settings</h3>
+        <button class="modal-close" id="closeRenderModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="render-options">
+          <div class="option-group">
+            <label>Render Type</label>
+            <select id="renderType">
+              <option value="image">Still Image</option>
+              <option value="animation">Animation</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>Quality</label>
+            <select id="renderQuality">
+              <option value="low">Low (512x512)</option>
+              <option value="medium">Medium (1024x1024)</option>
+              <option value="high">High (2048x2048)</option>
+            </select>
+          </div>
+          <div class="option-group" id="fpsOption" style="display: none;">
+            <label>Frame Rate</label>
+            <select id="renderFPS">
+              <option value="24">24 FPS</option>
+              <option value="30">30 FPS</option>
+              <option value="60">60 FPS</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>Post-Processing</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" id="enableBloom"> Bloom</label>
+              <label><input type="checkbox" id="enableHDR"> HDR</label>
+              <label><input type="checkbox" id="enableAA"> Anti-Aliasing</label>
+            </div>
+          </div>
+        </div>
+        <div class="render-preview">
+          <canvas id="renderPreview" width="200" height="200"></canvas>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="startRender" class="btn primary">🚀 Start Render</button>
+        <button id="downloadRender" class="btn success" style="display: none;">💾 Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Texture Generator Modal -->
+  <div class="modal-overlay" id="textureModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🖼️ AI Texture Generator</h3>
+        <button class="modal-close" id="closeTextureModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="texture-options">
+          <div class="option-group">
+            <label>Material Type</label>
+            <select id="materialType">
+              <option value="wood">Wood</option>
+              <option value="metal">Metal</option>
+              <option value="stone">Stone</option>
+              <option value="fabric">Fabric</option>
+              <option value="plastic">Plastic</option>
+              <option value="glass">Glass</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>Style</label>
+            <select id="textureStyle">
+              <option value="realistic">Realistic</option>
+              <option value="stylized">Stylized</option>
+              <option value="worn">Worn/Aged</option>
+              <option value="clean">Clean/New</option>
+            </select>
+          </div>
+          <div class="option-group">
+            <label>Color Scheme</label>
+            <input type="color" id="baseColor" value="#808080">
+          </div>
+        </div>
+        <div class="texture-preview">
+          <canvas id="texturePreview" width="200" height="200"></canvas>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="generateTextureBtn" class="btn primary">🎨 Generate</button>
+        <button id="applyTexture" class="btn success" style="display: none;">✅ Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu Dropdowns -->
+  <div class="menu-dropdown" id="fileDropdown">
+    <button class="dropdown-item" id="newProject">New Project</button>
+    <button class="dropdown-item" id="openProject">Open Project</button>
+    <button class="dropdown-item" id="saveProject">Save Project</button>
+    <button class="dropdown-item" id="saveAsProject">Save As...</button>
+    <div class="dropdown-separator"></div>
+    <button class="dropdown-item" id="exportScene">Export Scene</button>
+    <button class="dropdown-item" id="importScene">Import Scene</button>
+  </div>
+
+  <div class="menu-dropdown" id="editDropdown">
+    <button class="dropdown-item" id="undoAction">Undo</button>
+    <button class="dropdown-item" id="redoAction">Redo</button>
+    <div class="dropdown-separator"></div>
+    <button class="dropdown-item" id="copyObject">Copy</button>
+    <button class="dropdown-item" id="pasteObject">Paste</button>
+    <button class="dropdown-item" id="duplicateAction">Duplicate</button>
+  </div>
+
+  <div class="menu-dropdown" id="addDropdown">
+    <button class="dropdown-item" id="addMesh">Mesh</button>
+    <button class="dropdown-item" id="addLight">Light</button>
+    <button class="dropdown-item" id="addCamera">Camera</button>
+    <button class="dropdown-item" id="addEmpty">Empty</button>
+  </div>
+
+  <div class="menu-dropdown" id="renderDropdown">
+    <button class="dropdown-item" id="renderImage">Render Image</button>
+    <button class="dropdown-item" id="renderAnimation">Render Animation</button>
+    <button class="dropdown-item" id="renderSettings">Render Settings</button>
+  </div>
+
+  <!-- Tooltips -->
+  <div class="tooltip" id="tooltip"></div>
+
+  <!-- Hidden file input -->
+  <input type="file" id="projectFileInput" accept=".json,.blend" style="display: none;">
 </body>
 </html>
